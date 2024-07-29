@@ -1,0 +1,5 @@
+demoparser2
+numpy
+pandas
+python-dotenv
+requests
