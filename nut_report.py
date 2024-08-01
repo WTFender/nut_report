@@ -174,9 +174,7 @@ if __name__ == "__main__":
         include_header=INCLUDE_HEADER,
     )
     print(report)
-
-    # "addons", "server_name", "demo_file_stamp", "network_protocol", "map_name", "fullpackets_version", "allow_clientside_entities", "allow_clientside_particles", "demo_version_name", "demo_version_guid", "client_name", "game_directory"
-
+    
     # notify
     if POST_WEBHOOK and WEBHOOK_URL:
         send_webhook(WEBHOOK_URL, report)
