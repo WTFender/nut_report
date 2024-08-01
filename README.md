@@ -9,7 +9,7 @@ python nut_report.py match730_003697890146624995381_0051397283_129.dem
 | round | player                   | killed                                   | time      | meter |
 +-------+--------------------------+------------------------------------------+-----------+-------+
 | 8     | WTFender (SideAlley)     | bbw (TSpawn), Bulla (SideAlley)          | 0.73 (47) |       |
-| 11    | WTFender (Apartments)    | xeofobia (BackAlley), Bulla (BackAlley)  | 0.84 (54) |       |
+| 10    | WTFender (Apartments)    | xeofobia (BackAlley), Bulla (BackAlley)  | 0.84 (54) |       |
 | 11    | WTFender (Apartments)    | xeofobia (Catwalk), Bulla (Catwalk),     | 0.21 (13) | 🥜🥜 |
 |       |                          | bbw (Catwalk)                            |           |       |
 +-------+--------------------------+------------------------------------------+-----------+-------+
