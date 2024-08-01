@@ -48,6 +48,7 @@ def get_rating_text():
 
 def parse_demo(demoFilePath):
     parser = DemoParser(demoFilePath)
+    info = parser.parse_header()
     df = parser.parse_event("player_death", player=["last_place_name", "team_name", "game_time"], other=["total_rounds_played", "is_warmup_period"])
     df = df.replace(np.nan, None)
     columns = ["total_rounds_played", "game_time", "game_time_diff", "tick", "attacker_name", "attacker_last_place_name", "user_name", "user_last_place_name"]
@@ -102,9 +103,9 @@ def parse_demo(demoFilePath):
                 "kills": quick_kills,
                 "zones": list(set([kill["attacker_last_place_name"] for kill in quick_kills]))
             })
-    return player_events
+    return player_events, info
 
-def create_report(player_events, include_chart=False, include_rating=False):
+def create_report(player_events, info, include_chart=False, include_rating=False, include_header=True):
     report = prettytable.PrettyTable(["round", "player", "killed", "time", "meter"], sort_by="round")
     report.align = "l"
     report._max_width = {"player": 25, "killed" : 40}
@@ -121,9 +122,15 @@ def create_report(player_events, include_chart=False, include_rating=False):
 
     report_str = report.get_string(sortby="round")
     if include_chart:
-        report_str = nut_chart() + "\n" + report_str
+        report_str = report_str + "\n" + nut_chart()
     if include_rating:
         report_str = report_str + "\n" + get_rating_text()
+    if include_header:
+        header = prettytable.PrettyTable(["1", "2"])
+        header.header = False
+        header.align = "l"
+        header.add_row([info['map_name'], info['server_name']])
+        report_str = header.get_string() + "\n" + report_str
     return report_str
 
 def send_webhook(url, payload):
@@ -141,7 +148,8 @@ if __name__ == "__main__":
 
     # settings
     INCLUDE_CHART = True
-    INCLUDE_RATING = True
+    INCLUDE_RATING = False
+    INCLUDE_HEADER = True
     POST_WEBHOOK = False
     KILL_THRESHOLD_SECONDS = 1
 
@@ -157,9 +165,17 @@ if __name__ == "__main__":
         exit(1)
 
     # parse demo, create report
-    player_events = parse_demo(demoFilePath)
-    report = create_report(player_events, include_chart=INCLUDE_CHART, include_rating=INCLUDE_RATING)
+    player_events, info = parse_demo(demoFilePath)
+    report = create_report(
+        player_events,
+        info,
+        include_chart=INCLUDE_CHART,
+        include_rating=INCLUDE_RATING,
+        include_header=INCLUDE_HEADER,
+    )
     print(report)
+
+    # "addons", "server_name", "demo_file_stamp", "network_protocol", "map_name", "fullpackets_version", "allow_clientside_entities", "allow_clientside_particles", "demo_version_name", "demo_version_guid", "client_name", "game_directory"
 
     # notify
     if POST_WEBHOOK and WEBHOOK_URL:
