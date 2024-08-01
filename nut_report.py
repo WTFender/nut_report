@@ -137,7 +137,7 @@ def send_webhook(url, payload):
 if __name__ == "__main__":
     # cfg
     load_dotenv()
-    WEBHOOK_URL = getenv("WEBHOOK_URL", "NO_WEBHOOK_URL_FOUND")
+    WEBHOOK_URL = getenv("WEBHOOK_URL", None)
 
     # settings
     INCLUDE_CHART = True
@@ -162,5 +162,5 @@ if __name__ == "__main__":
     print(report)
 
     # notify
-    if POST_WEBHOOK:
+    if POST_WEBHOOK and WEBHOOK_URL:
         send_webhook(WEBHOOK_URL, report)
