@@ -2,6 +2,6 @@
 !nut_report
 !requirements.txt
 !.env.example
-!setup.py
+!pyproject.toml
 !LICENSE
 !README.md
