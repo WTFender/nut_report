@@ -1,12 +1,14 @@
 # nut_report
-
+### Install
+```
+pip install nut-report
+```
 ### Usage
 ```sh
-python nut_report.py                             # default csgo folder
-python nut_report.py "c:/path/to/demos/"         # load a folder
-python nut_report.py "c:/path/to/demos/demo.dem" # load a demo
+nut_report                             # default demos folder
+nut_report "c:/path/to/demos/"         # load a folder
+nut_report "c:/path/to/demos/demo.dem" # load a demo
 ```
-
 ### Nut Report
 ```
   ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
