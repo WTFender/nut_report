@@ -1,3 +1,4 @@
+from urllib.parse import urlparse
 from dotenv import find_dotenv, load_dotenv
 from consolemenu import ConsoleMenu, MenuFormatBuilder
 from consolemenu.items import FunctionItem, SubmenuItem, CommandItem
@@ -18,16 +19,29 @@ pd.set_option("mode.chained_assignment", None)
 pd.set_option("display.max_rows", 500)
 
 
+def close(code):
+    exit(code)
+
+
 def nut_chart():
-    chart = PrettyTable(["1", "2", "3", "4", "5", "6"])
+    chart = PrettyTable(
+        [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+        ]
+    )
     chart.add_row(
         [
-            "nut meter",
             NUT,
             (NUT * 2),
             (NUT * 3),
-            (FIRE * 3),
-            f"kills, timing & location influence the nut meter",
+            (NUT * 4),
+            (NUT * 5),
+            "kills, timing, and location affects the nut meter",
         ]
     )
     chart.align = "l"
@@ -42,21 +56,21 @@ def get_rating(num_kills, num_zones, time):
         or (num_kills >= 3 and time <= 0.1 and num_zones >= 2)
         or (num_zones >= 3)
     ):
-        return FIRE * 3
+        return NUT * 5
     elif (num_kills >= 4 and time <= 0.25) or (
         num_kills >= 3 and time <= 0.25 and num_zones >= 2
     ):
-        return NUT * 3
+        return NUT * 4
     elif (num_kills >= 2 and time <= 0.25) or (
         num_kills >= 2 and time <= 0.5 and num_zones >= 2
     ):
-        return NUT * 2
+        return NUT * 3
     elif (num_kills >= 2 and time <= 0.5) or (
         num_kills >= 2 and time <= 1 and num_zones >= 2
     ):
-        return NUT
+        return NUT * 2
     else:
-        return ""  # no nuts
+        return NUT
 
 
 def get_rating_text():
@@ -171,17 +185,26 @@ def parse_demo(demoFilePath):
 
 
 def create_report(
-    player_events, info, include_chart=False, include_rating=False, include_header=True
+    player_events, info, include_chart=False, include_rating=False, include_header=False
 ):
     report = PrettyTable(
-        ["round", "player", "killed", "time", "meter"], sort_by="round"
+        [
+            "meter",
+            "round",
+            "time",
+            "player",
+            "killed",
+        ]
     )
     report.set_style(PLAIN_COLUMNS)
     report.align = "l"
-    report.min_table_width = 100
-    widths = {"round": 1, "player": 20, "killed": 35, "time": 10, "meter": 1}
+    report.max_table_width = 100
+    widths = {
+        "meter": 10,
+        "round": 10,
+        "time": 10,
+    }  # "time": 10, "meter": 5, }
     report._min_width = widths
-    report._max_width = widths
 
     for event in player_events:
         event["meter"] = get_rating(
@@ -189,7 +212,9 @@ def create_report(
         )
         report.add_row(
             [
+                event["meter"],
                 event["round"],
+                f'{float("{:.2f}".format(event["time"]))} ({event["ticks"]})',
                 f"{event['player']} ({', '.join(event['zones'])})",
                 ", ".join(
                     [
@@ -197,8 +222,6 @@ def create_report(
                         for kill in event["kills"]
                     ]
                 ),
-                f'{float("{:.2f}".format(event["time"]))} ({event["ticks"]})',
-                event["meter"],
             ]
         )
 
@@ -252,26 +275,18 @@ def send_webhook(url, payload):
 
 
 if __name__ == "__main__":
-
     # cfg
     load_dotenv(find_dotenv())
-    WEBHOOK_URL = getenv("WEBHOOK_URL", None)
+    KILL_THRESHOLD_SECONDS = float(getenv("KILL_THRESHOLD_SECONDS", 1))
+    WEBHOOK_URL = getenv("NR_WEBHOOK_URL", None)
 
     # settings
-    INCLUDE_CHART = False
-    INCLUDE_RATING = False
-    INCLUDE_HEADER = False
     USE_EMOJIS = False
-    POST_WEBHOOK = True
-    POST_SUMMARY_ONLY = True
-    KILL_THRESHOLD_SECONDS = 1
     DEFAULT_PATH = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive\\game\\csgo\\replays"
 
     NUT = "*"
-    FIRE = "$"
     if USE_EMOJIS:
         NUT = "🥜"
-        FIRE = "🔥"
 
     # get demo file path
     if len(argv) > 1:
@@ -295,6 +310,8 @@ if __name__ == "__main__":
     else:
         demoFilePaths = [argFilePath]
 
+    print(f"Loading {len(demoFilePaths)} demo(s) from {argFilePath}")
+
     reports = []
 
     for demoFilePath in demoFilePaths:
@@ -303,9 +320,6 @@ if __name__ == "__main__":
         report = create_report(
             player_events,
             info,
-            include_chart=INCLUDE_CHART,
-            include_rating=INCLUDE_RATING,
-            include_header=INCLUDE_HEADER,
         )
         reports.append(
             {
@@ -322,16 +336,16 @@ if __name__ == "__main__":
     summary = summarize_events(reports)
 
     thin = Dimension(
-        width=120, height=60
+        width=100, height=40
     )  # Use a Dimension to limit the "screen width" to 40 characters
     menu_format = MenuFormatBuilder(max_dimension=thin)
     menu = ConsoleMenu(
         f"Nut Reporter",
         nut_chart(),
         prologue_text=("Select a demo:"),
-        epilogue_text=(f"Loaded: {argFilePath}"),
+        epilogue_text=(argFilePath),
         exit_menu_char="q",
-        exit_option_text="quit",
+        exit_option_text="Quit",
     )
     menu.formatter = menu_format
 
@@ -342,17 +356,27 @@ if __name__ == "__main__":
         for idx, r in enumerate(reports):
             header = "\n".join(
                 [
-                    f"#{idx+1}",
+                    f"#{idx+1} {r["info"]["created"]}",
                     r["info"]["server_name"],
-                    r["info"]["created"],
                     r["info"]["map_name"],
                 ]
             )
             submenu = ConsoleMenu(
                 header,
                 r["report"],
+                epilogue_text=f"KILL_THRESHOLD_SECONDS: {KILL_THRESHOLD_SECONDS}",
+                exit_option_text="Back",
+                exit_menu_char="b",
             )
-            submenu.append_item(FunctionItem("Send Webhook", send_webhook, (WEBHOOK_URL, r['report']), menu_char='1', should_exit=True))
+            if WEBHOOK_URL:
+                submenu.append_item(
+                    FunctionItem(
+                        f"Send Webhook ({(urlparse(WEBHOOK_URL).netloc)})",
+                        send_webhook,
+                        (WEBHOOK_URL, r["report"]),
+                        menu_char="s",
+                    )
+                )
             submenu.formatter = menu_format
             submenu_item = SubmenuItem(
                 f"{r['info']['created']} {r['info']['map_name']} ({len(r['player_events'])})",
