@@ -1,5 +1,7 @@
+console-menu
 demoparser2
 numpy
 pandas
+prettytable
 python-dotenv
 requests
