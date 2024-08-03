@@ -1,5 +1,6 @@
 *
-!nut_report/**
+!nut_report
+!nut_report/*.py
 !requirements.txt
 !.env.example
 !pyproject.toml
