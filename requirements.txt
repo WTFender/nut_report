@@ -1,7 +1,7 @@
-console-menu
-demoparser2
-numpy
-pandas
-prettytable
-python-dotenv
-requests
+console-menu==0.8.0
+demoparser2==0.28.0
+numpy==2.0.1
+pandas==2.2.2
+prettytable==3.10.2
+python-dotenv==1.0.1
+requests==2.32.3
